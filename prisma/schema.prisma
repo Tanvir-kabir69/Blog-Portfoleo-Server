@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma" //COMMENT THIS LINE
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  CREDENTIAL
+  GOOGLE
+  GITHUB
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  USER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id           Int          @id @unique @default(autoincrement())
+  email        String       @unique
+  password     String?
+  name         String?
+  address      String?
+  gender       Gender?
+  dob          DateTime?
+  role         Role         @default(USER)
+  image        String?
+  blogs        Blog[]
+  isSubscribed Boolean      @default(false)
+  provider     AuthProvider
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt()
+}
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  tags        String[]
+  image       String?
+  content     String?
+  slug        String
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  features    String[] @default([])
+  liveUrl     String?
+  repoUrl     String?
+  image       String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+}
