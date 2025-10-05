@@ -41,8 +41,11 @@ model User {
   dob          DateTime?
   role         Role         @default(USER)
   image        String?
-  blogs        Blog[]
+  isActive     Boolean      @default(true)
+  isBlocked    Boolean      @default(false)
+  isDeleted    Boolean      @default(false)
   isSubscribed Boolean      @default(false)
+  blogs        Blog[]
   provider     AuthProvider
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt()
@@ -52,10 +55,11 @@ model Blog {
   id          Int      @id @default(autoincrement())
   title       String
   description String
-  tags        String[]
+  tags        String[] @default([])
   image       String?
   content     String?
   slug        String
+  views       Int
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
@@ -69,7 +73,7 @@ model Project {
   features    String[] @default([])
   liveUrl     String?
   repoUrl     String?
-  image       String[]
+  image       String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt()
 }
