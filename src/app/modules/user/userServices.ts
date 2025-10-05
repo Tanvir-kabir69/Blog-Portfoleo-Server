@@ -1,0 +1,121 @@
+import { Prisma, User } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { envVars } from "../../config/env";
+import { prisma } from "../../config/db";
+import AppError from "../../utils/AppError";
+import httpStatus from "http-status-codes";
+import { TMeta } from "../../interfaces/meta";
+
+const createUserIntoDB = async (
+  payload: Prisma.UserCreateInput
+): Promise<User> => {
+  const hashedPassword = await bcrypt.hash(
+    payload.password as string,
+    Number(envVars.BCRYPT_SALT_ROUND)
+  );
+  const hashedUserData: Prisma.UserCreateInput = {
+    ...payload,
+    password: hashedPassword,
+    provider: "CREDENTIAL",
+  };
+  const result = await prisma.user.create({ data: hashedUserData });
+  return result;
+};
+
+const getAllUsersFromDB = async (
+  search: string,
+  page: number,
+  limit: number,
+  orderOn: string,
+  orderBy: string
+): Promise<{ data: Partial<User>[]; meta?: TMeta }> => {
+  const skip = (page - 1) * limit;
+  console.log(search, ",", page, ",", limit);
+
+  // Start with empty object
+  let where: any = {};
+
+  // Add conditionally if search is valid
+  if (search && search.trim() !== "") {
+    where = {
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { address: { contains: search, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  const result = await prisma.user.findMany({
+    skip,
+    take: limit,
+    // where: {
+    //   OR: [
+    //     { name: { contains: search, mode: "insensitive" } },
+    //     { address: { contains: search, mode: "insensitive" } },
+    //   ],
+    // },
+    where,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      name: true,
+      address: true,
+      gender: true,
+      dob: true,
+      image: true,
+      isSubscribed: true,
+      _count: {
+        select: {
+          blogs: true,
+        },
+      },
+    },
+    // orderBy: { id: "desc" },
+    orderBy: { [orderOn]: orderBy },
+  });
+
+  //   if (!result || result.length === 0) {
+  if (!result) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Something Went wrong, try again"
+    );
+  }
+
+  const total = await prisma.user.count({ where });
+
+  return {
+    data: result,
+    meta: { page, limit, total: total, totalPage: Math.ceil(total / limit) },
+  };
+};
+
+const getASingleUserFromDB = async (id: number) => {
+  const result = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      name: true,
+      address: true,
+      gender: true,
+      dob: true,
+      image: true,
+      isSubscribed: true,
+      _count: {
+        select: {
+          blogs: true,
+        },
+      },
+    },
+  });
+  return result;
+};
+
+export const userService = {
+  createUserIntoDB,
+  getAllUsersFromDB,
+  getASingleUserFromDB,
+};
