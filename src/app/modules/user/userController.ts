@@ -95,8 +95,32 @@ const getASingleUser = catchAsync(
   }
 );
 
+const updateASingleUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = Number(req.params.id);
+    const payload = req.body;
+    const result = await userService.updateASingleUserIntoDB(id, payload);
+
+    if (result?.id) {
+      sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "User is updated successfully",
+        data: result,
+      });
+      return;
+    } else {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Something went Weong, please try again"
+      );
+    }
+  }
+);
+
 export const userController = {
   createUser,
   getAllUsers,
   getASingleUser,
+  updateASingleUser,
 };

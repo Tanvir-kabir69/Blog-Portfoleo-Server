@@ -45,4 +45,15 @@ export const createUserSchema = z.object({
 /**
  * Inferred TS type from schema
  */
+
+export const updateUserValidationSchema = z.object({
+  name: z.string().min(1, "Name cannot be empty"),
+  address: z.string().min(1, "Address cannot be empty"),
+  gender: z.enum(["MALE", "FEMALE"]),
+  dob: z
+    .string()
+    .datetime({ message: "Invalid date format. Use ISO string format." }),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserValidationSchema>;

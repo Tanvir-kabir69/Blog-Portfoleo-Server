@@ -114,8 +114,54 @@ const getASingleUserFromDB = async (id: number) => {
   return result;
 };
 
+const updateASingleUserIntoDB = async (
+  id: number,
+  payload: Prisma.UserUpdateInput
+) => {
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: payload,
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      gender: true,
+      dob: true,
+    },
+  });
+
+  if (!updatedUser) {
+    throw new Error("User not updated!");
+  }
+
+  return updatedUser;
+};
+
+const deleteASingleUserIntoDB = async (
+  id: number,
+) => {
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: {},
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      gender: true,
+      dob: true,
+    },
+  });
+
+  if (!updatedUser) {
+    throw new Error("User not updated!");
+  }
+
+  return updatedUser;
+};
+
 export const userService = {
   createUserIntoDB,
   getAllUsersFromDB,
   getASingleUserFromDB,
+  updateASingleUserIntoDB,
 };
