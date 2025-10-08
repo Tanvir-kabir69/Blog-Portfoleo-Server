@@ -4,6 +4,7 @@ import { userService } from "./userServices";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes";
 import AppError from "../../utils/AppError";
+import { UpdateFlag } from "./utils/updateUserFlag";
 
 const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -118,9 +119,40 @@ const updateASingleUser = catchAsync(
   }
 );
 
+const updateUserFlagController = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // ✅ Validate the incoming payload
+    // const parsedData = updateUserFlagZodSchema.parse(req.body);
+    const { id, action, actionValue } = req.body;
+
+    // ✅ Update user based on action type
+    const result = await userService.updateUserFlagService(
+      id as number,
+      action as UpdateFlag,
+      actionValue as boolean
+    );
+
+    if (!result) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Failed to update user. Please try again."
+      );
+    }
+
+    // ✅ Success Response
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: `User ${action} status updated successfully`,
+      data: result,
+    });
+  }
+);
+
 export const userController = {
   createUser,
   getAllUsers,
   getASingleUser,
   updateASingleUser,
+  updateUserFlagController,
 };

@@ -5,6 +5,7 @@ import { prisma } from "../../config/db";
 import AppError from "../../utils/AppError";
 import httpStatus from "http-status-codes";
 import { TMeta } from "../../interfaces/meta";
+import updateUserFlag, { UpdateFlag } from "./utils/updateUserFlag";
 
 const createUserIntoDB = async (
   payload: Prisma.UserCreateInput
@@ -137,23 +138,46 @@ const updateASingleUserIntoDB = async (
   return updatedUser;
 };
 
-const deleteASingleUserIntoDB = async (
+// ✅ Service functions using the enum
+
+// const deleteASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_DELETED, true);
+
+// const reAddASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_DELETED, false);
+// const blockASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_BLOCKED, true);
+
+// const unblockASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_BLOCKED, false);
+
+// const makeSubscribedASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_SUBSCRIBED, true);
+
+// const makeUnsubscribedASingleUserIntoDB = (id: number) =>
+//   updateUserFlag(id, UpdateFlag.IS_SUBSCRIBED, false);
+
+// ✅ Generic reusable helper
+const updateUserFlagService = async (
   id: number,
+  field: UpdateFlag,
+  value: boolean
 ) => {
   const updatedUser = await prisma.user.update({
     where: { id },
-    data: {},
+    data: { [field]: value },
     select: {
       id: true,
-      name: true,
-      address: true,
-      gender: true,
-      dob: true,
+      email: true,
+      [field]: true,
     },
   });
 
   if (!updatedUser) {
-    throw new Error("User not updated!");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Failed to update user '${field}' status as: ${value}`
+    );
   }
 
   return updatedUser;
@@ -164,4 +188,11 @@ export const userService = {
   getAllUsersFromDB,
   getASingleUserFromDB,
   updateASingleUserIntoDB,
+  // deleteASingleUserIntoDB,
+  // reAddASingleUserIntoDB,
+  // blockASingleUserIntoDB,
+  // unblockASingleUserIntoDB,
+  // makeSubscribedASingleUserIntoDB,
+  // makeUnsubscribedASingleUserIntoDB,
+  updateUserFlagService,
 };

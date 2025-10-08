@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UpdateFlag } from "./utils/updateUserFlag";
 
 /**
  * Gender enum must match your Prisma enum names:
@@ -55,5 +56,14 @@ export const updateUserValidationSchema = z.object({
     .datetime({ message: "Invalid date format. Use ISO string format." }),
 });
 
+export const updateUserFlagSchema = z.object({
+  id: z.number({ message: "User ID must be a number" }).optional(),
+  action: z.enum(Object.values(UpdateFlag) as [string, ...string[]], {
+    message: "Invalid action type",
+  }),
+  actionValue: z.boolean({ message: "Action value must be true or false" }),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserValidationSchema>;
+export type UpdateUserStatusInput = z.infer<typeof updateUserFlagSchema>;
