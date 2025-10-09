@@ -1,7 +1,7 @@
 import http, { Server } from "http";
 import app from "./app";
 import dotenv from "dotenv";
-import { prisma } from "./config/db";
+import { prisma } from "./app/config/db";
 
 dotenv.config();
 
@@ -10,9 +10,9 @@ let server: Server | null = null;
 async function connectToDB() {
   try {
     await prisma.$connect();
-    console.log("*** DB connection successfull!!");
+    console.log("✅ DB connection successfull!!");
   } catch (error) {
-    console.log("*** DB connection failed!");
+    console.log("🚫 DB connection failed!");
     console.log(error)
     process.exit(1);
   }
