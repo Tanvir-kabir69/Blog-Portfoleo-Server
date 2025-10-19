@@ -1,6 +1,7 @@
 import { IRouter, Router } from "express";
 import userRouter from "../modules/user/userRouter";
 import blogRouter from "../modules/blog/blogRouter";
+import authRouter from "../modules/auth/authRouter";
 
 interface ModuleRoute {
   path: string;
@@ -18,13 +19,19 @@ const moduleRoutes: ModuleRoute[] = [
     path: "/blog",
     router: blogRouter,
   },
+  {
+    path: "/auth",
+    router: authRouter,
+  },
 ];
 
-router.use("/user", userRouter);
-router.use("/blog", blogRouter);
+// router.use("/user", userRouter);
+// router.use("/blog", blogRouter);
 moduleRoutes.forEach((route) => router.use(route.path, route.router));
 
 export default router;
+
+// --------------------------------------------------------------------
 
 // import express, { IRouter } from "express";
 
@@ -37,6 +44,8 @@ export default router;
 // router.post("/users", (req, res) => {
 //   res.send("User created");
 // });
+
+// ------------------------------------------------------------------
 
 // import express, { IRoute } from "express";
 
