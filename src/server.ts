@@ -2,6 +2,7 @@ import http, { Server } from "http";
 import app from "./app";
 import dotenv from "dotenv";
 import { prisma } from "./app/config/db";
+import seedOwner from "./app/utils/seedOwner";
 
 dotenv.config();
 
@@ -13,19 +14,19 @@ async function connectToDB() {
     console.log("✅ DB connection successfull!!");
   } catch (error) {
     console.log("🚫 DB connection failed!");
-    console.log(error)
+    console.log(error);
     process.exit(1);
   }
 }
 
 async function startServer() {
   try {
-    connectToDB();
+    await connectToDB(); // ✅ wait for DB connection first
     server = http.createServer(app);
-    server.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, async () => {
       console.log(`🚀 Server is running on port ${process.env.PORT}`);
+      await seedOwner(); // ✅ seed only after server + DB ready
     });
-
     handleProcessEvents();
   } catch (error) {
     console.error("❌ Error during server startup:", error);

@@ -2,50 +2,96 @@ import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
 import AppError from "./AppError";
-import { accountStatus, IUser } from "../modules/user/user.interface";
-import { User } from "../modules/user/user.model";
 import { generateToken, verifyToken } from "./jwt";
+import { User } from "@prisma/client";
+import { AuthTokens } from "../interfaces/auhtTokens";
+import { prisma } from "../config/db";
+import { IJwtPayload } from "../interfaces/jwtPayload";
 
-export const createUserTokens = (user: Partial<IUser>) => {
-    const jwtPayload = {
-        userId: user._id,
-        email: user.email,
-        role: user.role
-    }
-    const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRES)
+// export const createUserTokens = (user: Partial<User>): AuthTokens => {
+export const createUserTokens = (user: User): AuthTokens => {
+  const jwtPayload: IJwtPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+    isSubscribed: user.isSubscribed,
+  };
+  const accessToken = generateToken(
+    jwtPayload,
+    envVars.JWT_ACCESS_SECRET,
+    envVars.JWT_ACCESS_EXPIRES
+  );
 
-    const refreshToken = generateToken(jwtPayload, envVars.JWT_REFRESH_SECRET, envVars.JWT_REFRESH_EXPIRES)
+  const refreshToken = generateToken(
+    jwtPayload,
+    envVars.JWT_REFRESH_SECRET,
+    envVars.JWT_REFRESH_EXPIRES
+  );
 
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
 
-    return {
-        accessToken,
-        refreshToken
-    }
-}
+export const createNewAccessTokenByRefreshToken = async (
+  refreshToken: string
+): Promise<Partial<AuthTokens>> => {
+  try {
+    const verifiedRefreshToken = verifyToken(
+      refreshToken,
+      envVars.JWT_REFRESH_SECRET
+    ) as JwtPayload;
 
-export const createNewAccessTokenWithRefreshToken = async (refreshToken: string) => {
-
-    const verifiedRefreshToken = verifyToken(refreshToken, envVars.JWT_REFRESH_SECRET) as JwtPayload
-
-
-    const isUserExist = await User.findOne({ email: verifiedRefreshToken.email })
+    const isUserExist = await prisma.user.findUnique({
+      where: { email: verifiedRefreshToken.email },
+    });
 
     if (!isUserExist) {
-        throw new AppError(httpStatus.BAD_REQUEST, "User does not exist")
+      throw new AppError(httpStatus.BAD_REQUEST, "User does not exist");
     }
-    if (isUserExist.accountStatus === accountStatus.BLOCKED || isUserExist.accountStatus === accountStatus.INACTIVE) {
-        throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.accountStatus}`)
+    if (!isUserExist.password) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Password not set for this account"
+      );
     }
+
     if (isUserExist.isDeleted) {
-        throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
+      throw new AppError(httpStatus.BAD_REQUEST, "User is deleted");
     }
 
-    const jwtPayload = {
-        userId: isUserExist._id,
-        email: isUserExist.email,
-        role: isUserExist.role
+    if (isUserExist.isBlocked) {
+      throw new AppError(httpStatus.BAD_REQUEST, "User is blocked");
     }
-    const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRES)
 
-    return accessToken
-}
+    if (!isUserExist.isActive) {
+      throw new AppError(httpStatus.BAD_REQUEST, "User is inactive");
+    }
+
+    // if (!isUserExist.isVerified) {
+    //   return done(null, false, { message: "User is not verified" });
+    // }
+
+    const jwtPayload: IJwtPayload = {
+      userId: isUserExist.id,
+      email: isUserExist.email,
+      role: isUserExist.role,
+      isVerified: isUserExist.isVerified,
+      isSubscribed: isUserExist.isSubscribed,
+    };
+    const accessToken = generateToken(
+      jwtPayload,
+      envVars.JWT_ACCESS_SECRET,
+      envVars.JWT_ACCESS_EXPIRES
+    );
+
+    return { accessToken };
+  } catch (err) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Something went wrong in generating new Access Token"
+    );
+  }
+};

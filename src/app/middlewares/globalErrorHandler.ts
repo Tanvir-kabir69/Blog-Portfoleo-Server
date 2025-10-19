@@ -8,6 +8,7 @@ import { handlerDuplicateError } from "./helpers/handleDuplicateError";
 import { handlerValidationError } from "./helpers/handlerValidationError";
 import { handlerZodError } from "./helpers/handlerZodError";
 import { TErrorSources } from "../interfaces/error.types";
+import { envVars } from "../config/env";
 
 export const globalErrorHandler = async (
   err: any,
@@ -15,9 +16,9 @@ export const globalErrorHandler = async (
   res: Response,
   next: NextFunction
 ) => {
-  // if (envVars.NODE_ENV === "development") {
-  //   console.log(err);
-  // }
+  if (envVars.NODE_ENV === "development") {
+    console.log(err);
+  }
 
   let errorSources: TErrorSources[] = [];
   let statusCode = 500;
@@ -58,7 +59,7 @@ export const globalErrorHandler = async (
     success: false,
     message,
     errorSources,
-    // err: envVars.NODE_ENV === "development" ? err : null,
-    // stack: envVars.NODE_ENV === "development" ? err.stack : null,
+    err: envVars.NODE_ENV === "development" ? err : null,
+    stack: envVars.NODE_ENV === "development" ? err.stack : null,
   });
 };
