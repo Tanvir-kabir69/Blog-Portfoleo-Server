@@ -68,13 +68,34 @@ model Blog {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  features    String[] @default([])
-  liveUrl     String?
-  repoUrl     String?
-  image       String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt()
+  id           Int          @id @default(autoincrement())
+  title        String
+  description  String
+  tags         String[]     @default([])
+  liveUrl      String?
+  repoUrl      String?
+  images       String[]     @default([])
+  features     Feature[] // Relation to Feature table
+  technologies Technology[] // Relation to Technology table
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt()
+}
+
+model Feature {
+  id                Int     @id @default(autoincrement())
+  representingEmoji String
+  featureName       String
+  shortDescription  String? // Optional
+  tutorialDemo      String? // Optional
+  projectId         Int
+  project           Project @relation(fields: [projectId], references: [id])
+}
+
+model Technology {
+  id                Int     @id @default(autoincrement())
+  representingEmoji String
+  technologyName    String
+  usage             String? // Optional
+  projectId         Int
+  project           Project @relation(fields: [projectId], references: [id])
 }
