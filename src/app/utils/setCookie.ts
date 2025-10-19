@@ -1,11 +1,10 @@
 import { Response } from "express";
+import { AuthTokens } from "../interfaces/auhtTokens";
 
-export interface AuthTokens {
-  accessToken?: string;
-  refreshToken?: string;
-}
-
-export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
+export const setAuthCookie = (
+  res: Response,
+  tokenInfo: Partial<AuthTokens>
+) => {
   if (tokenInfo.accessToken) {
     res.cookie("accessToken", tokenInfo.accessToken, {
       httpOnly: true,

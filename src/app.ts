@@ -4,6 +4,9 @@ import express, { NextFunction, Request, Response } from "express";
 import notFoundRoute from "./app/middlewares/notFound";
 import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import router from "./app/router";
+import passport from "passport";
+import "./app/config/passport";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -11,6 +14,7 @@ const app = express();
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(compression()); // Compresses response bodies for faster delivery
 app.use(express.json()); // Parse incoming JSON requests
+app.use(cookieParser()); // Parse incoming cookies with request
 
 app.use(
   cors({
@@ -18,6 +22,9 @@ app.use(
     credentials: true,
   })
 );
+
+// passport initialization
+app.use(passport.initialize());
 
 // Default route for testing
 app.get("/", (req: Request, res: Response) => {
