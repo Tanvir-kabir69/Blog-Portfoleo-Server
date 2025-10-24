@@ -1,0 +1,131 @@
+************************
+
+🧩 req.file and req.files do not come from Express itself.
+
+They are added by Multer, not part of Express’s default Request type.
+
+
+✅ Multer augments Express types
+
+When you import from multer, it actually declares module augmentation like:
+
+---
+declare global {
+  namespace Express {
+    interface Request {
+      file?: Express.Multer.File;
+      files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
+    }
+  }
+}
+---
+
+That’s how TypeScript recognizes req.file and req.files after Multer is in your project.
+
+
+Property    Added by    	Type
+---------------------------------------------------------------------
+req.file    Multer	    Express.Multer.File
+req.files   Multer	    Express.Multer.File[] or record of arrays
+
+Default Express?	❌ No
+
+
+*************************
+
+
+Here’s how it works depending on which Multer method you use 👇
+
+🧩 multerUpload.single("file")
+
+Expects one file with field name "file".
+
+You get:
+
+req.file; // ✅ single object
+req.files; // ❌ undefined
+
+
+Example:
+
+{
+  fieldname: 'file',
+  originalname: 'photo.png',
+  path: 'https://res.cloudinary.com/.../photo.png',
+  mimetype: 'image/png',
+  size: 102400
+}
+
+🧩 multerUpload.array("files", 5)
+
+Expects multiple files with field name "files".
+
+You get:
+
+req.files; // ✅ array of file objects
+req.file;  // ❌ undefined
+
+
+Example:
+
+[
+  { fieldname: 'files', originalname: '1.png', ... },
+  { fieldname: 'files', originalname: '2.png', ... }
+]
+
+🧩 multerUpload.fields([{ name: "image" }, { name: "video" }])
+
+Expects different field names (for example, one for images, one for videos).
+
+You get:
+
+req.files; // ✅ object with fieldname-based arrays
+req.file;  // ❌ undefined
+
+
+Example:
+
+{
+  image: [{ ... }, { ... }],
+  video: [{ ... }]
+}
+
+
+So yes —
+✔ single() → req.file
+✔ array() → req.files (array)
+✔ fields() → req.files (object of arrays)
+
+
+*****************************************
+
+
+✅ Exactly right!
+
+Cloudinary automatically detects the file type (image, video, etc.) and adds the correct extension to the uploaded file’s public URL — even if you don’t manually include it in the public_id.
+
+For example:
+
+params: {
+  public_id: "profile_picture_123"
+}
+
+
+If you upload a PNG file, Cloudinary will automatically store it as:
+
+https://res.cloudinary.com/<cloud_name>/image/upload/v1234567890/profile_picture_123.png
+
+
+So you don’t need to manually add .png or .jpg at the end of your public ID.
+It’s optional — if you include it, Cloudinary treats it as part of the name, not a necessity.
+
+👉 Summary:
+
+File type is auto-detected by MIME type (image/png, image/jpeg, etc.).
+
+Correct extension is auto-appended in the URL.
+
+You can skip adding the extension in your public_id safely.
+
+
+****************************************
