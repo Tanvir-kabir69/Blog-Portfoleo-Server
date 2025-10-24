@@ -9,6 +9,7 @@ import { handlerValidationError } from "./helpers/handlerValidationError";
 import { handlerZodError } from "./helpers/handlerZodError";
 import { TErrorSources } from "../interfaces/error.types";
 import { envVars } from "../config/env";
+import { deleteFromCloudinary } from "../config/multerCloudinary/cloudinary";
 
 export const globalErrorHandler = async (
   err: any,
@@ -18,6 +19,16 @@ export const globalErrorHandler = async (
 ) => {
   if (envVars.NODE_ENV === "development") {
     console.log(err);
+  }
+
+  if (req.file) {
+    await deleteFromCloudinary(req.file.path);
+  }
+  if (req.files && Array.isArray(req.files) && req.files.length) {
+    const imageUrls = (req.files as Express.Multer.File[]).map(
+      (file) => file.path
+    );
+    await Promise.all(imageUrls.map((url) => deleteFromCloudinary(url)));
   }
 
   let errorSources: TErrorSources[] = [];

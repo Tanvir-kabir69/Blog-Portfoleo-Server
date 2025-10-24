@@ -14,6 +14,7 @@ const app = express();
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(compression()); // Compresses response bodies for faster delivery
 app.use(express.json()); // Parse incoming JSON requests
+app.use(express.urlencoded({ extended: true })); // Handels formdata
 app.use(cookieParser()); // Parse incoming cookies with request
 
 app.use(
