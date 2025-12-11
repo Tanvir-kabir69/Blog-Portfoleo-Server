@@ -107,6 +107,7 @@ const loadEnvVariables = (): EnvConfig => {
     "SMTP_HOST",
     "SMTP_PORT",
     "SMTP_FROM",
+
     // "REDIS_HOST",
     // "REDIS_PORT",
     // "REDIS_USERNAME",
