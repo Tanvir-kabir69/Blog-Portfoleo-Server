@@ -3,6 +3,7 @@ import app from "./app";
 import dotenv from "dotenv";
 import { prisma } from "./app/config/db";
 import seedOwner from "./app/utils/seedOwner";
+import { connectToRedis } from "./app/config/redis.config";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ async function connectToDB() {
 async function startServer() {
   try {
     await connectToDB(); // ✅ wait for DB connection first
+    await connectToRedis(); // ✅ wait for Redis DB connection
     server = http.createServer(app);
     server.listen(process.env.PORT, async () => {
       console.log(`🚀 Server is running on port ${process.env.PORT}`);
