@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { prisma } from "./app/config/db";
 import seedOwner from "./app/utils/seedOwner";
 import transporter from "./app/config/nodemailerConfig";
+import { connectToRedis } from "./app/config/redis.config";
 
 dotenv.config();
 
@@ -23,7 +24,8 @@ async function connectToDB() {
 async function startServer() {
   try {
     await connectToDB(); // ✅ wait for DB connection first
-
+    await connectToRedis(); // ✅ wait for Redis DB connection
+    
     // 🔐 Verify SMTP before server starts
     transporter.verify((error, success) => {
       if (error) {
