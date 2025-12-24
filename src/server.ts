@@ -27,7 +27,7 @@ async function startServer() {
     await connectToRedis(); // ✅ wait for Redis DB connection
     
     // 🔐 Verify SMTP before server starts
-    transporter.verify((error, success) => {
+    await transporter.verify((error, success) => { // ✅(await) 'SMTP failure' NOT to crash the server
       if (error) {
         console.error("SMTP connection failed", error);
       } else {
